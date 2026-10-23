@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
 import com.expense.Expense;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class ExpenseDAO {
 
@@ -47,6 +49,33 @@ public class ExpenseDAO {
 
             System.out.println("Expense saved successfully!");
         }
+    }
+
+    public java.util.List<Expense> getAllExpenses() throws SQLException {
+
+        java.util.List<Expense> expenses = new ArrayList<>();
+
+        String sql = "SELECT id, title, amount, category, date FROM expenses ORDER BY date DESC, id DESC";
+
+        try (Connection connection = DatabaseManager.getConnection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+
+            while (resultSet.next()) {
+
+                Expense expense = new Expense(
+                        resultSet.getInt("id"),
+                        resultSet.getString("title"),
+                        resultSet.getDouble("amount"),
+                        resultSet.getString("category"),
+                        java.time.LocalDate.parse(resultSet.getString("date"))
+                );
+
+                expenses.add(expense);
+            }
+        }
+
+        return expenses;
     }
 
 }

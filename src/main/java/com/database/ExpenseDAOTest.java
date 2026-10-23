@@ -22,6 +22,18 @@ public class ExpenseDAOTest {
             );
 
             expenseDAO.addExpense(expense);
+            
+            System.out.println("\nSaved expenses:");
+
+            for (Expense savedExpense : expenseDAO.getAllExpenses()) {
+                System.out.println(
+                        savedExpense.getTitle()
+                        + " | Rs. " + savedExpense.getAmount()
+                        + " | " + savedExpense.getCategory()
+                        + " | " + savedExpense.getDate()
+                );
+            }
+
 
             System.out.println("================================");
             System.out.println("   SpendSphere Expense Test");
