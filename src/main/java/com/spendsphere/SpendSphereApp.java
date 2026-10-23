@@ -32,6 +32,9 @@ public class SpendSphereApp {
     private static JTable expenseTable;
     private static JFrame frame;
 
+    private static JTextField searchField;
+    private static JComboBox<String> categoryFilter;
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(SpendSphereApp::createUI);
     }
@@ -140,6 +143,46 @@ public class SpendSphereApp {
         summaryPanel.add(monthlyCard);
         summaryPanel.add(transactionsCard);
 
+        // Search and category filter panel
+        JPanel filterPanel = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 10, 8)
+        );
+        filterPanel.setBackground(BACKGROUND);
+        filterPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        searchField = new JTextField(18);
+        searchField.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        searchField.setToolTipText("Search expenses by title");
+
+        String[] filterCategories = {
+                "All Categories", "Food", "Travel", "Shopping",
+                "Bills", "Education", "Entertainment", "Other"
+        };
+
+        categoryFilter = new JComboBox<>(filterCategories);
+        categoryFilter.setFont(new Font("SansSerif", Font.PLAIN, 13));
+
+        JButton searchButton = new JButton("Search");
+        searchButton.setFocusPainted(false);
+        searchButton.addActionListener(e -> filterExpenses());
+
+        JButton clearButton = new JButton("Clear");
+        clearButton.setFocusPainted(false);
+        clearButton.addActionListener(e -> {
+            searchField.setText("");
+            categoryFilter.setSelectedIndex(0);
+            refreshDashboard();
+        });
+
+        // Pressing Enter in the search box runs the search.
+        searchField.addActionListener(e -> filterExpenses());
+
+        filterPanel.add(new JLabel("Search:"));
+        filterPanel.add(searchField);
+        filterPanel.add(categoryFilter);
+        filterPanel.add(searchButton);
+        filterPanel.add(clearButton);
+
         // Recent activity panel
         JPanel activityPanel = new JPanel(new BorderLayout(0, 15));
         activityPanel.setBackground(Color.WHITE);
@@ -183,7 +226,7 @@ public class SpendSphereApp {
         );
         expenseTable.setFillsViewportHeight(true);
 
-        // Keep the database ID available for deletion but hide it.
+        // Keep the database ID for deletion but hide its column.
         expenseTable.getColumnModel().getColumn(0).setMinWidth(0);
         expenseTable.getColumnModel().getColumn(0).setMaxWidth(0);
         expenseTable.getColumnModel().getColumn(0).setWidth(0);
@@ -216,7 +259,9 @@ public class SpendSphereApp {
         content.add(subtitle);
         content.add(Box.createVerticalStrut(28));
         content.add(summaryPanel);
-        content.add(Box.createVerticalStrut(26));
+        content.add(Box.createVerticalStrut(20));
+        content.add(filterPanel);
+        content.add(Box.createVerticalStrut(10));
         content.add(activityPanel);
 
         JScrollPane scrollPane = new JScrollPane(content);
@@ -311,6 +356,42 @@ public class SpendSphereApp {
 
         } catch (SQLException e) {
             showError("Could not load expenses: " + e.getMessage());
+        }
+    }
+
+    private static void filterExpenses() {
+        String searchText = searchField.getText()
+                .trim()
+                .toLowerCase();
+
+        String selectedCategory =
+                (String) categoryFilter.getSelectedItem();
+
+        try {
+            List<Expense> expenses = expenseDAO.getAllExpenses();
+            tableModel.setRowCount(0);
+
+            for (Expense expense : expenses) {
+                boolean matchesTitle = expense.getTitle()
+                        .toLowerCase()
+                        .contains(searchText);
+
+                boolean matchesCategory =
+                        "All Categories".equals(selectedCategory)
+                        || expense.getCategory().equals(selectedCategory);
+
+                if (matchesTitle && matchesCategory) {
+                    tableModel.addRow(new Object[]{
+                            expense.getId(),
+                            expense.getTitle(),
+                            String.format("%.2f", expense.getAmount()),
+                            expense.getCategory(),
+                            expense.getDate()
+                    });
+                }
+            }
+        } catch (SQLException e) {
+            showError("Could not filter expenses: " + e.getMessage());
         }
     }
 
