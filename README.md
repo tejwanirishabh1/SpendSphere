@@ -1,94 +1,107 @@
 
 # SpendSphere 💸
+
 ### Where Did My Money Go?
 
-SpendSphere is a personal finance tracking application built with Java. The goal is to make expense management easier and help users understand their spending habits.
+SpendSphere is a desktop personal finance application built with Java Swing. It helps users record expenses, organize spending, review financial activity, and manage budgets through a visual dashboard.
 
-## 🎯 Project Goals
+## Features
 
-- Record and organize daily expenses.
-- Categorize spending to understand where money goes.
-- Review expense history and spending patterns.
-- Build a foundation for budgets and financial insights.
+- **Expense Management:** Add and delete expenses.
+- **Search and Filtering:** Find transactions using search, category, and date filters.
+- **Persistent Storage:** Store expense records using SQLite.
+- **Dashboard:** View spending summaries and recent transactions.
+- **Visual Analytics:** Explore category-wise and monthly spending charts.
+- **Overall Monthly Budget:** Set a monthly spending limit and track progress.
+- **Category Budgets:** Set separate monthly budgets for individual expense categories.
+- **Date Selection:** Use a date picker when entering transactions.
+- **Quick Launch:** Start the application using `run.bat` on Windows.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Language:** Java 21
+- **GUI:** Java Swing
 - **Build Tool:** Apache Maven
-- **IDE:** Visual Studio Code
+- **Database:** SQLite
+- **JDBC Driver:** SQLite JDBC
+- **Date Picker:** LGoodDatePicker
 - **Version Control:** Git and GitHub
+- **Development Environment:** Visual Studio Code
 
-## 🚧 Development Status
-
-**Currently in development.**
-
-The initial Maven project setup is complete. Expense management, data persistence, and dashboard features are planned for upcoming development stages.
-
-## ▶️ Getting Started
-
-### Prerequisites
+## Prerequisites
 
 - Java JDK 21 or later
-- Apache Maven 3.10.0 or later
-- Git
+- Apache Maven 3.10.0 or later, or the included Windows launcher configured for your Maven installation
+- Git, if cloning the repository
 
-### Run the Project
+## Getting Started
 
-Clone the repository:
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/tejwanirishabh1/SpendSphere.git
-```
-
-Enter the project directory:
-
-```bash
 cd SpendSphere
 ```
 
-Compile the application:
+### 2. Run on Windows
+
+Double-click `run.bat` from the project folder.
+
+Alternatively, open a terminal in the project directory and run:
 
 ```bash
-mvn compile
+mvn compile exec:java "-Dexec.mainClass=com.spendsphere.SpendSphereApp"
 ```
 
-Run the application:
+The command-line method requires Maven to be available in your PATH.
 
-```bash
-mvn exec:java -Dexec.mainClass="com.spendsphere.SpendSphereApp"
-```
+### 3. Database and budgets
 
-If Maven is not configured in your system PATH, use your local Maven executable instead.
+Expense records are stored locally in `spendsphere.db`. The database is intentionally excluded from version control so personal expense data is not published to GitHub.
 
-## 📁 Project Structure
+Budget preferences are stored locally using Java Preferences.
+
+## Project Structure
 
 ```text
 SpendSphere/
 ├── src/
 │   └── main/
 │       └── java/
-│           └── com/
-│               └── spendsphere/
-│                   └── SpendSphereApp.java
-├── .gitignore
+│           ├── com/
+│           │   ├── spendsphere/
+│           │   │   ├── SpendSphereApp.java
+│           │   │   └── CategoryBudgetManager.java
+│           │   ├── database/
+│           │   │   ├── DatabaseManager.java
+│           │   │   ├── ExpenseDAO.java
+│           │   │   ├── DatabaseTest.java
+│           │   │   └── ExpenseDAOTest.java
+│           │   └── expense/
+│           │       └── Expense.java
+├── run.bat
 ├── pom.xml
+├── .gitignore
 └── README.md
 ```
 
-## 🗺️ Planned Features
+## Development Status
 
-- [ ] Add, edit, and delete expenses
-- [ ] Expense categories
-- [ ] Persistent storage
-- [ ] Monthly spending summaries
-- [ ] Visual spending charts
-- [ ] Budget tracking
+SpendSphere is an actively developed learning project. Features and interface details may evolve as development continues.
 
-## 👨‍💻 Author
+## Future Improvements
+
+- Edit existing transactions
+- Export reports
+- Additional analytics and insights
+- Further usability and accessibility improvements
+
+## Author
 
 **Rishabh Tejwani**
 
-GitHub: [@tejwanirishabh1](https://github.com/tejwanirishabh1)
+- GitHub: [@tejwanirishabh1](https://github.com/tejwanirishabh1)
+- Repository: [SpendSphere](https://github.com/tejwanirishabh1/SpendSphere)
 
 ---
 
