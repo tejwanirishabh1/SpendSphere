@@ -2,6 +2,8 @@
 package com.database;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
+import com.expense.Expense;
 
 public class ExpenseDAOTest {
 
@@ -12,14 +14,25 @@ public class ExpenseDAOTest {
         try {
             expenseDAO.createTable();
 
+            Expense expense = new Expense(
+                    "Lunch",
+                    250.00,
+                    "Food",
+                    LocalDate.now()
+            );
+
+            expenseDAO.addExpense(expense);
+
             System.out.println("================================");
-            System.out.println("   SpendSphere Database Test");
+            System.out.println("   SpendSphere Expense Test");
             System.out.println("================================");
-            System.out.println("Expenses table created successfully!");
-            System.out.println("Database setup is complete.");
+            System.out.println("Title: Lunch");
+            System.out.println("Amount: Rs. 250.00");
+            System.out.println("Category: Food");
+            System.out.println("Expense saved to SQLite!");
 
         } catch (SQLException e) {
-            System.out.println("Failed to create expenses table!");
+            System.out.println("Expense test failed!");
             e.printStackTrace();
         }
     }
