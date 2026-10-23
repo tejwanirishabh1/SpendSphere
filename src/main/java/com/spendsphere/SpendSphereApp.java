@@ -27,7 +27,9 @@ public class SpendSphereApp {
     private static JLabel monthlySpendingValue;
     private static JLabel transactionCountValue;
     private static JLabel totalDescription;
+
     private static DefaultTableModel tableModel;
+    private static JTable expenseTable;
     private static JFrame frame;
 
     public static void main(String[] args) {
@@ -72,12 +74,8 @@ public class SpendSphereApp {
 
         JButton addExpenseButton = new JButton("+ Add Expense");
         addExpenseButton.setFocusPainted(false);
-        addExpenseButton.setCursor(
-                new Cursor(Cursor.HAND_CURSOR)
-        );
-        addExpenseButton.addActionListener(
-                e -> showAddExpenseForm()
-        );
+        addExpenseButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        addExpenseButton.addActionListener(e -> showAddExpenseForm());
 
         JPanel headerRight = new JPanel(
                 new FlowLayout(FlowLayout.RIGHT, 15, 0)
@@ -111,9 +109,7 @@ public class SpendSphereApp {
         subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Summary cards
-        JPanel summaryPanel = new JPanel(
-                new GridLayout(1, 3, 18, 0)
-        );
+        JPanel summaryPanel = new JPanel(new GridLayout(1, 3, 18, 0));
         summaryPanel.setBackground(BACKGROUND);
         summaryPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         summaryPanel.setMaximumSize(
@@ -122,22 +118,23 @@ public class SpendSphereApp {
         summaryPanel.setPreferredSize(new Dimension(1000, 135));
 
         JPanel totalCard = createSummaryCard(
-                "TOTAL SPENDING", "₹0.00",
-                "All recorded expenses"
+                "TOTAL SPENDING", "₹0.00", "All recorded expenses"
         );
         JPanel monthlyCard = createSummaryCard(
-                "THIS MONTH", "₹0.00",
-                "Current month spending"
+                "THIS MONTH", "₹0.00", "Current month spending"
         );
         JPanel transactionsCard = createSummaryCard(
-                "TRANSACTIONS", "0",
-                "Expenses recorded"
+                "TRANSACTIONS", "0", "Expenses recorded"
         );
 
-        totalSpendingValue = (JLabel) totalCard.getClientProperty("value");
-        monthlySpendingValue = (JLabel) monthlyCard.getClientProperty("value");
-        transactionCountValue = (JLabel) transactionsCard.getClientProperty("value");
-        totalDescription = (JLabel) totalCard.getClientProperty("description");
+        totalSpendingValue =
+                (JLabel) totalCard.getClientProperty("value");
+        monthlySpendingValue =
+                (JLabel) monthlyCard.getClientProperty("value");
+        transactionCountValue =
+                (JLabel) transactionsCard.getClientProperty("value");
+        totalDescription =
+                (JLabel) totalCard.getClientProperty("description");
 
         summaryPanel.add(totalCard);
         summaryPanel.add(monthlyCard);
@@ -159,7 +156,7 @@ public class SpendSphereApp {
         activityTitle.setForeground(TEXT);
 
         String[] columns = {
-                "Title", "Amount (₹)", "Category", "Date"
+                "ID", "Title", "Amount (₹)", "Category", "Date"
         };
 
         tableModel = new DefaultTableModel(columns, 0) {
@@ -169,7 +166,10 @@ public class SpendSphereApp {
             }
         };
 
-        JTable expenseTable = new JTable(tableModel);
+        expenseTable = new JTable(tableModel);
+        expenseTable.setSelectionMode(
+                ListSelectionModel.SINGLE_SELECTION
+        );
         expenseTable.setRowHeight(30);
         expenseTable.setFont(new Font("SansSerif", Font.PLAIN, 13));
         expenseTable.setForeground(TEXT);
@@ -183,15 +183,32 @@ public class SpendSphereApp {
         );
         expenseTable.setFillsViewportHeight(true);
 
+        // Keep the database ID available for deletion but hide it.
+        expenseTable.getColumnModel().getColumn(0).setMinWidth(0);
+        expenseTable.getColumnModel().getColumn(0).setMaxWidth(0);
+        expenseTable.getColumnModel().getColumn(0).setWidth(0);
+
         JScrollPane tableScrollPane = new JScrollPane(expenseTable);
         tableScrollPane.setBorder(BorderFactory.createEmptyBorder());
         tableScrollPane.getViewport().setBackground(Color.WHITE);
 
+        JButton deleteButton = new JButton("Delete Selected Expense");
+        deleteButton.setFocusPainted(false);
+        deleteButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        deleteButton.addActionListener(e -> deleteSelectedExpense());
+
+        JPanel activityBottom = new JPanel(
+                new FlowLayout(FlowLayout.RIGHT, 0, 0)
+        );
+        activityBottom.setBackground(Color.WHITE);
+        activityBottom.add(deleteButton);
+
         activityPanel.add(activityTitle, BorderLayout.NORTH);
         activityPanel.add(tableScrollPane, BorderLayout.CENTER);
-        activityPanel.setPreferredSize(new Dimension(1000, 280));
+        activityPanel.add(activityBottom, BorderLayout.SOUTH);
+        activityPanel.setPreferredSize(new Dimension(1000, 300));
         activityPanel.setMaximumSize(
-                new Dimension(Integer.MAX_VALUE, 320)
+                new Dimension(Integer.MAX_VALUE, 340)
         );
 
         content.add(welcome);
@@ -271,6 +288,7 @@ public class SpendSphereApp {
                 }
 
                 tableModel.addRow(new Object[]{
+                        expense.getId(),
                         expense.getTitle(),
                         String.format("%.2f", expense.getAmount()),
                         expense.getCategory(),
@@ -278,16 +296,13 @@ public class SpendSphereApp {
                 });
             }
 
-            totalSpendingValue.setText(
-                    String.format("₹%.2f", total)
-            );
+            totalSpendingValue.setText(String.format("₹%.2f", total));
             monthlySpendingValue.setText(
                     String.format("₹%.2f", monthlyTotal)
             );
             transactionCountValue.setText(
                     String.valueOf(expenses.size())
             );
-
             totalDescription.setText(
                     expenses.size() == 1
                             ? "1 expense recorded"
@@ -295,12 +310,52 @@ public class SpendSphereApp {
             );
 
         } catch (SQLException e) {
+            showError("Could not load expenses: " + e.getMessage());
+        }
+    }
+
+    private static void deleteSelectedExpense() {
+        int selectedRow = expenseTable.getSelectedRow();
+
+        if (selectedRow == -1) {
             JOptionPane.showMessageDialog(
                     frame,
-                    "Could not load expenses: " + e.getMessage(),
-                    "Database Error",
-                    JOptionPane.ERROR_MESSAGE
+                    "Please select an expense from the table first.",
+                    "No Expense Selected",
+                    JOptionPane.WARNING_MESSAGE
             );
+            return;
+        }
+
+        int modelRow = expenseTable.convertRowIndexToModel(selectedRow);
+        int expenseId = (int) tableModel.getValueAt(modelRow, 0);
+        String title = (String) tableModel.getValueAt(modelRow, 1);
+
+        int confirmation = JOptionPane.showConfirmDialog(
+                frame,
+                "Are you sure you want to delete \"" + title + "\"?",
+                "Confirm Deletion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirmation != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+            expenseDAO.deleteExpense(expenseId);
+            refreshDashboard();
+
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Expense deleted successfully.",
+                    "SpendSphere",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (SQLException e) {
+            showError("Could not delete expense: " + e.getMessage());
         }
     }
 
@@ -317,18 +372,14 @@ public class SpendSphereApp {
         };
 
         JComboBox<String> categoryBox = new JComboBox<>(categories);
-
         JPanel form = new JPanel(new GridLayout(0, 2, 10, 12));
 
         form.add(new JLabel("Expense title:"));
         form.add(titleField);
-
         form.add(new JLabel("Amount (₹):"));
         form.add(amountField);
-
         form.add(new JLabel("Category:"));
         form.add(categoryBox);
-
         form.add(new JLabel("Date (YYYY-MM-DD):"));
         form.add(dateField);
 
@@ -363,14 +414,10 @@ public class SpendSphereApp {
             }
 
             LocalDate date = LocalDate.parse(dateText);
-
-            Expense expense = new Expense(
-                    title, amount, category, date
-            );
+            Expense expense = new Expense(title, amount, category, date);
 
             expenseDAO.createTable();
             expenseDAO.addExpense(expense);
-
             refreshDashboard();
 
             JOptionPane.showMessageDialog(
@@ -396,9 +443,8 @@ public class SpendSphereApp {
         JOptionPane.showMessageDialog(
                 frame,
                 message,
-                "Please check your input",
+                "SpendSphere",
                 JOptionPane.WARNING_MESSAGE
         );
     }
 }
-

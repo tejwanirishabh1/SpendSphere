@@ -1,3 +1,4 @@
+
 package com.database;
 
 import java.sql.Connection;
@@ -7,6 +8,7 @@ import java.sql.PreparedStatement;
 import com.expense.Expense;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ExpenseDAO {
 
@@ -29,7 +31,7 @@ public class ExpenseDAO {
             System.out.println("Expenses table is ready!");
         }
     }
-    
+
     public void addExpense(Expense expense) throws SQLException {
 
         String sql = """
@@ -51,11 +53,15 @@ public class ExpenseDAO {
         }
     }
 
-    public java.util.List<Expense> getAllExpenses() throws SQLException {
+    public List<Expense> getAllExpenses() throws SQLException {
 
-        java.util.List<Expense> expenses = new ArrayList<>();
+        List<Expense> expenses = new ArrayList<>();
 
-        String sql = "SELECT id, title, amount, category, date FROM expenses ORDER BY date DESC, id DESC";
+        String sql = """
+                SELECT id, title, amount, category, date
+                FROM expenses
+                ORDER BY date DESC, id DESC
+                """;
 
         try (Connection connection = DatabaseManager.getConnection();
              Statement statement = connection.createStatement();
@@ -68,7 +74,9 @@ public class ExpenseDAO {
                         resultSet.getString("title"),
                         resultSet.getDouble("amount"),
                         resultSet.getString("category"),
-                        java.time.LocalDate.parse(resultSet.getString("date"))
+                        java.time.LocalDate.parse(
+                                resultSet.getString("date")
+                        )
                 );
 
                 expenses.add(expense);
@@ -78,4 +86,21 @@ public class ExpenseDAO {
         return expenses;
     }
 
+    public void deleteExpense(int id) throws SQLException {
+
+        String sql = "DELETE FROM expenses WHERE id = ?";
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, id);
+            int rowsDeleted = statement.executeUpdate();
+
+            if (rowsDeleted > 0) {
+                System.out.println("Expense deleted successfully!");
+            } else {
+                System.out.println("No expense found with ID: " + id);
+            }
+        }
+    }
 }
